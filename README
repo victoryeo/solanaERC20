@@ -1,0 +1,19 @@
+This is Typescript to mint ERC20 equiv tokens on Solana
+
+# Sequence
+
+## create mint account
+
+npx esrun create-token-mint
+
+## create token account
+
+npx esrun create-token-account
+
+## create token metadata
+
+npx esrun create-token-metadata
+
+## mint token of the newly created mint account
+
+npx esrun mint-token.ts
