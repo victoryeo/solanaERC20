@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, Mint, MintTo};
+use anchor_spl::token::{self, Token, Mint, MintTo, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
 
 declare_id!("HUwgaHaWDvNH1vEuxzYWrYgxk41ymyhr3kk6tit3c6zh");
@@ -66,7 +66,7 @@ pub struct InitializeMint<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(request_id: [u8; 32])]
+#[instruction(request_id: [u8; 12])]
 pub struct MintCollateral<'info> {
     #[account(mut)]
     pub mint_authority: Signer<'info>,
