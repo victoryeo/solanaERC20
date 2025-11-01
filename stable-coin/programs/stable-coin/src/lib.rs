@@ -133,7 +133,7 @@ pub struct InitializeMint<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(request_id: [u8; 12])]
+#[instruction(request_id: [u8; 32])]
 pub struct MintCollateral<'info> {
     #[account(mut)]
     pub mint_authority: Signer<'info>,
@@ -177,7 +177,7 @@ pub struct MintCollateral<'info> {
         init,
         payer = user,
         space = 8 + 32 + 8 + 8 + 1, // Added 8 more bytes for collateral_amount
-        seeds = [b"mint_request", &request_id],
+        seeds = [b"mint_request", request_id.as_ref()], // Fixed: use as_ref() for [u8; 32]
         bump
     )]
     pub mint_request: Account<'info, MintRequest>,
