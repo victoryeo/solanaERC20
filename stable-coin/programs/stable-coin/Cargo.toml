@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 anchor-lang = "0.32.0"
-anchor-spl = "0.32.0"
+anchor-spl = { version = "0.32.0", features = ["token_2022"] }
 
 [features]
 no-entrypoint = []

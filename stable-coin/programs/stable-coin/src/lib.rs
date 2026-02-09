@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, Mint, MintTo, Transfer};
+use anchor_spl::token_interface::{self}; 
 use anchor_spl::associated_token::AssociatedToken;
 
 declare_id!("HUwgaHaWDvNH1vEuxzYWrYgxk41ymyhr3kk6tit3c6zh");
@@ -69,19 +70,49 @@ pub mod stable_coin {
         amount: u64
     ) -> Result<()> {
         // First, burn stable coins from user
-        // Note: You'd need a Burn instruction for this, but for now we'll transfer back
+        let burn_cpi_accounts = token_interface::Burn {
+            mint: ctx.accounts.mint.to_account_info(),
+            from: ctx.accounts.user_token_account.to_account_info(),
+            authority: ctx.accounts.user.to_account_info(),
+        };
+        
+        let burn_cpi_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            burn_cpi_accounts
+        );
+    
+        token_interface::burn(burn_cpi_ctx, amount)?;
+        msg!("Burned {} stable coins from user", amount);
         
         // Transfer collateral back from vault to user
-        let transfer_cpi_accounts = Transfer {
+        let seeds = &[
+                b"vault_authority".as_ref(),
+                &[ctx.bumps.vault_authority],
+            ];
+        let signer = &[&seeds[..]];
+
+        // mint argument for validation, such as, token types, decimals
+        // and mint authority
+        let transfer_cpi_accounts = token_interface::TransferChecked {
             from: ctx.accounts.collateral_vault.to_account_info(),
+            mint: ctx.accounts.collateral_mint.to_account_info(),
             to: ctx.accounts.user_collateral_account.to_account_info(),
             authority: ctx.accounts.vault_authority.to_account_info(),
         };
         
-        let transfer_cpi_program = ctx.accounts.token_program.to_account_info();
-        let transfer_cpi_ctx = CpiContext::new(transfer_cpi_program, transfer_cpi_accounts);
+        let transfer_cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            transfer_cpi_accounts,
+            signer
+        );
         
-        token::transfer(transfer_cpi_ctx, amount)?;
+        // Using transfer_checked is the 2026 best practice for security
+        token_interface::transfer_checked(
+            transfer_cpi_ctx, 
+            amount, 
+            ctx.accounts.collateral_mint.decimals
+        )?;
+        
         msg!("Returned {} collateral tokens to user", amount);
 
         emit!(RedeemEvent {
@@ -201,7 +232,7 @@ pub struct RedeemCollateral<'info> {
     pub user: Signer<'info>,
     
     #[account(mut)]
-    pub mint: Account<'info, Mint>,
+    pub mint: Account<'info, Mint>,  // The Stablecoin Mint 
     
     #[account(mut)]
     pub collateral_mint: Account<'info, Mint>,
