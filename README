@@ -1,5 +1,9 @@
 This is Typescript code to mint ERC20 equivalent tokens on Solana.
 
+# Summary
+
+In solana, we create a Mint Account that stores token data (like total supply and decimals) and Token Accounts that store individual user balances.
+
 # Sequence
 
 ## create mint account
